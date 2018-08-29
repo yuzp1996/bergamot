@@ -135,6 +135,11 @@ func (sonar *SonarQube) IsVersion64() bool {
 	return sonar.Version == SONAR_VERSION_64
 }
 
+// IsVersion67 true version 6.7.4
+func (sonar *SonarQube) IsVersion67() bool {
+	return sonar.Version == SONAR_VERSION_67
+}
+
 // SystemStatus get sonarqube system status
 func (sonar *SonarQube) SystemStatus() (map[string]string, error) {
 	path, err := utils.GetURL(sonar.Endpoint, "api/system/status", nil)
@@ -184,6 +189,7 @@ func (sonar *SonarQube) GetVersion() (string, error) {
 const (
 	SONAR_VERSION_60 = "6.0.0"
 	SONAR_VERSION_64 = "6.4.0"
+	SONAR_VERSION_67 = "6.7.4"
 )
 
 // CreateProject create sonar project
@@ -193,7 +199,7 @@ func (sonar *SonarQube) CreateProject(name, projectKey string) error {
 
 	if sonar.IsVersion60() {
 		query["key"] = []string{projectKey}
-	} else if sonar.IsVersion64() {
+	} else if sonar.IsVersion64() || sonar.IsVersion67() {
 		query["project"] = []string{projectKey}
 	} else {
 		return fmt.Errorf("not support sonar version %s", sonar.Version)
@@ -273,7 +279,7 @@ func (sonar *SonarQube) GetProjectID(projectKey string) (string, error) {
 // 和alauda-sonar-scanner中的sonarClient兼容，200 ~ 400 返回json 数据,nil;>=400, 返回字符串,error
 func (sonar *SonarQube) GetSettings(component string, keys []string) (interface{}, error) {
 	switch sonar.Version {
-	case SONAR_VERSION_64:
+	case SONAR_VERSION_64 || SONAR_VERSION_67:
 		var query = url.Values{
 			"component": []string{component},
 			"keys":      []string{strings.Join(keys, ",")},
@@ -306,7 +312,7 @@ func (sonar *SonarQube) SetSettings(
 	key string, value string, values []string,
 ) (interface{}, error) {
 
-	if sonar.Version != SONAR_VERSION_64 {
+	if sonar.Version != SONAR_VERSION_64 && SONAR_VERSION_67 {
 		return nil, fmt.Errorf("method [GetSettings] does not support sonar version %s", sonar.Version)
 	}
 
@@ -400,7 +406,7 @@ func (sonar *SonarQube) SelectQualityGates(gateID int, projectID, projectKey str
 		query.Add("projectId", projectID)
 	}
 	if projectKey != "" {
-		if sonar.Version == SONAR_VERSION_64 {
+		if sonar.Version == SONAR_VERSION_64 || SONAR_VERSION_67 {
 			query.Add("projectKey", projectKey)
 		}
 	}
