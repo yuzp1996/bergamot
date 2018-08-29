@@ -279,7 +279,7 @@ func (sonar *SonarQube) GetProjectID(projectKey string) (string, error) {
 // 和alauda-sonar-scanner中的sonarClient兼容，200 ~ 400 返回json 数据,nil;>=400, 返回字符串,error
 func (sonar *SonarQube) GetSettings(component string, keys []string) (interface{}, error) {
 	switch sonar.Version {
-	case SONAR_VERSION_64 || SONAR_VERSION_67:
+	case SONAR_VERSION_64, SONAR_VERSION_67:
 		var query = url.Values{
 			"component": []string{component},
 			"keys":      []string{strings.Join(keys, ",")},
@@ -312,7 +312,7 @@ func (sonar *SonarQube) SetSettings(
 	key string, value string, values []string,
 ) (interface{}, error) {
 
-	if sonar.Version != SONAR_VERSION_64 && SONAR_VERSION_67 {
+	if sonar.Version != SONAR_VERSION_64 && sonar.Version != SONAR_VERSION_67 {
 		return nil, fmt.Errorf("method [GetSettings] does not support sonar version %s", sonar.Version)
 	}
 
@@ -406,7 +406,7 @@ func (sonar *SonarQube) SelectQualityGates(gateID int, projectID, projectKey str
 		query.Add("projectId", projectID)
 	}
 	if projectKey != "" {
-		if sonar.Version == SONAR_VERSION_64 || SONAR_VERSION_67 {
+		if sonar.Version == SONAR_VERSION_64 || sonar.Version == SONAR_VERSION_67 {
 			query.Add("projectKey", projectKey)
 		}
 	}
